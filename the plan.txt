@@ -1,0 +1,3 @@
+Create a flask application that can allow users to input URL and give them the option to download MP4 or MP3 files
+
+Make it so that they can optionally turn on sponsorblock setting by including a sponsorblock toggle (it would remove sponsors from the video)

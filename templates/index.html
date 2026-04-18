@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube to Mp4 Converter</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <h1>Youtube downloader</h1>
+    <form action="/download" method="POST">
+        <input type="text" name="url" placeholder="Insert Youtube URL here" id="urlInput">
+        <button type="submit" name="file_format" value="mp4">Download Mp4</button>
+        <button type="submit" name="file_format" value="mp3">Download Mp3</button>
+    </form>
+
+    <script src="static/index.js"></script>
+
+</body>
+
+</html>
