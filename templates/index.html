@@ -12,11 +12,13 @@
 </head>
 
 <body>
-    <h1>Youtube downloader</h1>
+    <h1>Youtube To Mp3/MP4</h1>
     <form action="/download" method="POST">
-        <input type="text" name="url" placeholder="Insert Youtube URL here" id="urlInput">
+        <input type="text" name="url" placeholder="Insert Youtube URL here" id="urlInput" required>
         <button type="submit" name="file_format" value="mp4">Download Mp4</button>
         <button type="submit" name="file_format" value="mp3">Download Mp3</button>
+        <input type="checkbox" name="sponsorblock" value="True">
+        <label>Enable SponsorBlock</label>
     </form>
 
     <script src="static/index.js"></script>
