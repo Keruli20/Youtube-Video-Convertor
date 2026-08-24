@@ -47,8 +47,8 @@ If the command is not recognised, install FFmpeg and ensure it has been added to
 Clone the repository and navigate to the project folder:
 
 ```bash
-git clone <repository>
-cd <project>
+git clone https://github.com/Keruli20/Youtube-Video-Convertor.git
+cd Youtube-Video-Convertor
 ```
 
 Create a virtual environment:
