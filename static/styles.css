@@ -1,0 +1,8 @@
+body {
+    background-color: #121212;
+    text-align: center;
+}
+
+h1, p, label{
+    color: white;
+}

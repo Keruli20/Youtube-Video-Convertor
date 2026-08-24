@@ -84,3 +84,5 @@ def download():
             filename = os.path.splitext(filename)[0] + ".mp4"
 
     return send_file(filename, as_attachment=True)
+
+app.run(host="0.0.0.0", port=5000)
