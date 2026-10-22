@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, send_file, after_this_request
 from yt_dlp import YoutubeDL
 import os
+import time
+import tempfile
+import shutil
 
 app = Flask(__name__)
 
@@ -19,24 +22,31 @@ def download():
     # TODO Add checks to ensure that the URL is valid using regex
         
 
-    # Gets the format of the button (Mp3 or Mp4)
+    # Gets the requested download format for the file (Mp3 or Mp4)
     file_format = request.form.get("file_format")
 
-    remove_sponsors = request.form.get("sponsorblock")
+    # Create a directory to store the downloads
+    os.makedirs("downloads", exist_ok=True)
 
+    # Runs cleanup function to remove old downloads in temp directory
+    cleanup_old_downloads()
+
+    remove_sponsors = request.form.get("sponsorblock")
     sponsorblock_postprocessors = []
     if remove_sponsors:
         sponsorblock_postprocessors = [
-            # Uses SponsorBlock to remove segments
+            # Retrieves segments timestamps from SponsorBlock
             {
                 "key": "SponsorBlock",
                 "categories": [
                     "sponsor",
                     "selfpromo",
+                    "intro",
                     "outro",
                     "interaction",
                 ],
             },
+            # Uses FFmpeg to remove the selected segments
             {
                 "key": "ModifyChapters",
                 "remove_sponsor_segments": [
@@ -49,28 +59,33 @@ def download():
             },
         ]
 
+    # Create a unique temporary directory to store the downloaded file
+    temp_dir = tempfile.mkdtemp(dir="downloads")
+
     if file_format == "mp3":
         options = {
+            # Selects the best audio stream
             "format": "bestaudio/best",
-            # Saves the output to a temp folder
-            "outtmpl": "temp/%(title)s.%(ext)s",
-            "overwrites": True,
+            # Uses FFmpeg to convert the downloaded audio into mp3
             "postprocessors": [
-                {  # Extract audio using ffmpeg
+                {
                     "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
+                    "preferredcodec": "mp3" ,
                 },
                 # Unpacks the sponsorblock postprocessors list of dictionaries into the postprocessors list
                 *sponsorblock_postprocessors,
             ],
+            # Saves the output to the temporary directory
+            "outtmpl": os.path.join(temp_dir, "%(title)s.%(ext)s"),
         }
     else:
         options = {
+            # Selects the best video + audio stream
             "format": "bestvideo+bestaudio/best",
-            "outtmpl": "temp/%(title)s.%(ext)s",
+            # Uses an MP4 container when merging the video + audio stream
             "merge_output_format": "mp4",
-            "overwrites": True,
             "postprocessors": sponsorblock_postprocessors,
+            "outtmpl": os.path.join(temp_dir, "%(title)s.%(ext)s"),
         }
 
     with YoutubeDL(options) as ydl:
@@ -84,5 +99,23 @@ def download():
             filename = os.path.splitext(filename)[0] + ".mp4"
 
     return send_file(filename, as_attachment=True)
+
+
+# Function that cleans up old downloads in the downloads directory
+def cleanup_old_downloads():
+    path = "downloads"
+    # Maximum age before the directory is deleted (1 hour)
+    max_age = 1 * 60 * 60
+    current_time = time.time()
+
+    # Scans each directory and gets their age
+    for directory in os.scandir(path):
+        if directory.isdir():
+            age = current_time - directory.stat().st_mtime
+
+        # If their age is greater than the maximum age, the directory is removed
+        if age > max_age:
+            shutil.rmtree(directory.path)
+            
 
 app.run(host="0.0.0.0", port=5000)
