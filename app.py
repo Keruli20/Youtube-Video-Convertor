@@ -4,6 +4,7 @@ import os
 import time
 import tempfile
 import shutil
+import re
 
 app = Flask(__name__)
 
@@ -15,12 +16,13 @@ def index():
 
 @app.route("/download", methods=["POST"])
 def download():
-
+    pattern = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$"
     url = request.form.get("url")
     if not url:
         return render_template("index.html", error="Please enter a URL")
-    # TODO Add checks to ensure that the URL is valid using regex
-        
+    # TODO Add checks to ensure that a youtube URL is valid using regex
+    elif not (re.search(pattern, url)):
+         return render_template("index.html", error="Invalid URL")
 
     # Gets the requested download format for the file (Mp3 or Mp4)
     file_format = request.form.get("file_format")
@@ -32,6 +34,7 @@ def download():
     cleanup_old_downloads()
 
     remove_sponsors = request.form.get("sponsorblock")
+    
     sponsorblock_postprocessors = []
     if remove_sponsors:
         sponsorblock_postprocessors = [
@@ -110,7 +113,7 @@ def cleanup_old_downloads():
 
     # Scans each directory and gets their age
     for directory in os.scandir(path):
-        if directory.isdir():
+        if directory.is_dir():
             age = current_time - directory.stat().st_mtime
 
         # If their age is greater than the maximum age, the directory is removed
