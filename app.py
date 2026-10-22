@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, after_this_request
+from flask import Flask, render_template, request, send_file
 from yt_dlp import YoutubeDL
 import os
 import time
@@ -13,16 +13,15 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
-
 @app.route("/download", methods=["POST"])
 def download():
     pattern = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$"
     url = request.form.get("url")
     if not url:
         return render_template("index.html", error="Please enter a URL")
-    # TODO Add checks to ensure that a youtube URL is valid using regex
+    # Ensures that a youtube URL is valid using regex
     elif not (re.search(pattern, url)):
-         return render_template("index.html", error="Invalid URL")
+        return render_template("index.html", error="Invalid URL")
 
     # Gets the requested download format for the file (Mp3 or Mp4)
     file_format = request.form.get("file_format")
@@ -33,32 +32,35 @@ def download():
     # Runs cleanup function to remove old downloads in temp directory
     cleanup_old_downloads()
 
-    remove_sponsors = request.form.get("sponsorblock")
+    # Creates a list of Sponsorblock categories to remove
+    categories = request.form.getlist("remove_category")
+    allowed_categories = {
+        "sponsor",
+        "intro",
+        "outro",
+        "selfpromo",
+        "preview",
+        "filler",
+        "interaction",
+        "hook"
+    }
+
+    for category in categories:
+        if category not in allowed_categories:
+            return render_template("index.html", error="Invalid category selected")
     
     sponsorblock_postprocessors = []
-    if remove_sponsors:
+    if categories:
         sponsorblock_postprocessors = [
             # Retrieves segments timestamps from SponsorBlock
             {
                 "key": "SponsorBlock",
-                "categories": [
-                    "sponsor",
-                    "selfpromo",
-                    "intro",
-                    "outro",
-                    "interaction",
-                ],
+                "categories": categories
             },
             # Uses FFmpeg to remove the selected segments
             {
                 "key": "ModifyChapters",
-                "remove_sponsor_segments": [
-                    "sponsor",
-                    "selfpromo",
-                    "intro",
-                    "outro",
-                    "interaction",
-                ],
+                "remove_sponsor_segments": categories
             },
         ]
 
